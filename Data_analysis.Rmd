@@ -1,0 +1,122 @@
+---
+title: "Data analysis"
+author: "Fabio Trecca"
+date: "2/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+require(knitr)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+library(pacman, ggplot2, dplyr)
+pacman::p_load(lme4, DHARMa)
+ggplot2::theme_set(theme_bw())
+```
+
+```{r load data}
+Samples <- read_csv("Exported_EyeLink_data/Cleaned/Samples_merged_Fabio.csv") %>% 
+  mutate(GazeY = 1051-GazeY, Fix_MeanY = 1051-Fix_MeanY) %>% 
+  filter(Time<=41202)
+```
+
+### Foraging Experiment
+```{r model of fixations}
+# Subset data so we only have one row per fixation
+Fix <- foraging[!is.na(foraging$FixationNo),] %>% # remember to remove NAs 
+  group_by(ParticipantID, Trial) %>% 
+  summarize(NFix = max(FixationNo),
+            Task = Task[1], ParticipantGender = ParticipantGender[1], 
+            Stimulus = Stimulus[1], ForagingType = ForagingType[1])
+
+#Models
+# Gaussian distribution
+gau_m_fix <- glmer(NFix ~ 1 + ForagingType + (1+ForagingType|ParticipantID) + (1+ForagingType|Stimulus), 
+               data = Fix,
+               family = gaussian(link = 'identity'))
+
+plot(gau_m_fix)
+
+# Poisson distribution
+poi_m_fix <- glmer(NFix ~ 1 + ForagingType + (1+ForagingType|ParticipantID) + (1+ForagingType|Stimulus), 
+               data = Fix,
+               family = poisson)
+
+plot(poi_m_fix)
+
+# Predict
+PredictGau_fix <- predict(gau_m_fix)
+PredictPoi_fix <- predict(poi_m_fix)
+
+plot(density(PredictGau_fix))
+plot(density(PredictPoi_fix))
+plot(density(Fix$NFix, na.rm = T))
+
+#Residuals
+dGau_fix <- DHARMa::simulateResiduals(gau_m_fix)
+plot(dGau_fix)
+
+dPoi_fix <- DHARMa::simulateResiduals(poi_m_fix)
+plot(dPoi_fix)
+
+```
+
+
+```{r model of saccades}
+# Subset data so we only have one row per saccade and only foraging task
+foraging <- subset(Samples, Task == 'Foraging')
+
+Sac <- foraging[!is.na(foraging$SaccadeNo),] %>% # remember to remove NAs 
+  group_by(ParticipantID, Trial, SaccadeNo) %>% 
+  summarize(Sac_Duration = mean(Sac_Duration, na.rm = T),
+            Sac_Amplitude = mean(Sac_Amplitude, na.rm = T),
+            Task = Task[1], ParticipantGender = ParticipantGender[1], 
+            Stimulus = Stimulus[1], ForagingType = ForagingType[1])
+
+#Models
+# Gaussian distribution
+gau_m <- glmer(Sac_Amplitude ~ 1 + ForagingType + (1+ForagingType|ParticipantID) + (1+ForagingType|Stimulus), 
+               data = Sac,
+               family = gaussian(link = 'identity'))
+
+plot(gau_m)
+
+# Lognormal distribution
+log_m <- glmer(Sac_Amplitude ~ 1 + ForagingType + (1+ForagingType|ParticipantID) + (1+ForagingType|Stimulus), 
+               data = Sac,
+               family = gaussian(link = 'log'))
+
+plot(log_m)
+
+# Predict
+PredictGau <- predict(gau_m)
+PredictLog <- predict(log_m)
+
+plot(density(PredictGau))
+plot(density(PredictLog))
+plot(density(Sac$Sac_Amplitude, na.rm = T))
+
+#Residuals
+dGau <- DHARMa::simulateResiduals(gau_m)
+plot(dGau)
+
+dLog <- DHARMa::simulateResiduals(log_m)
+plot(dLog)
+
+#Summarise lognormal model
+summary(log_m)
+#The estimates are on a log-scale!
+# Beta value for count
+exp(0.92669)
+# Beat value for search
+exp(0.92669 + 0.53761) #because the intercept is 0.92669
+
+MuMIn::r.squaredGLMM(log_m)
+#The model doesn't explain a lot of variance. The finding might be significant, but it doesn't explain a lot of the eye movements by condition.....
+```
+
+
+### Social Engagement Task
+```{r}
+
+```
+
