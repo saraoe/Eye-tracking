@@ -143,6 +143,27 @@ ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) +
   xlim(0,1680) + ylim(0,1050)
 ```
 
+Scanpath for Social engagement experiment
+```{r}
+## Here I am making the scanpath for one participant in one trial
+x = subset(Samples, ParticipantID ==	'F1' & Trial == 4)
+x$FixationNo <- as.factor(x$FixationNo)
+
+## Let's make a summary dataset
+Fix <- x[!is.na(x$FixationNo),] %>% 
+  group_by(FixationNo) %>% # since I only have one participant and one trial
+  summarize(MeanX = Fix_MeanX[1], MeanY = Fix_MeanY[1], Duration = Fix_Duration[1]) %>% 
+  filter(Duration>=300) # only keep fixations > 300 ms
+
+ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) + 
+  geom_path(color = "black") +
+  geom_point(size = Fix$Duration*.02, alpha = .8) +
+  ggrepel::geom_text_repel(aes(label = Fix$Duration), size = 3, color = "black") +
+  xlim(0,1680) + ylim(0,1050)
+
+```
+
+
 Using a for-loop, make a scanpath for each participant in the Foraging experiment. Use facets to plot the 10
 trials separately for each participant. Use these plots as diagnostic tools in order to answer the following
 questions:
@@ -413,4 +434,9 @@ ggplot(Samples, aes(Time, PupilSize, color = ParticipantGender)) +
 
 ggplot(Samples, aes(Time, PupilSize, color = ParticipantID)) +
   geom_smooth() + facet_wrap(.~Task, scales = "free_x")
+
+soc <- subset(Samples, Task == 'SocialEngagement')
+
+ggplot(soc, aes(Time, PupilSize, color = ParticipantGender)) +
+  geom_smooth() #+ facet_wrap(.~Task, scales = "free_x")
 ```

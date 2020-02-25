@@ -8,8 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 require(knitr)
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
-library(pacman, ggplot2, dplyr)
-pacman::p_load(lme4, DHARMa)
+library(pacman)
+pacman::p_load(lme4, DHARMa, tidyverse, patchwork)
 ggplot2::theme_set(theme_bw())
 ```
 
@@ -57,6 +57,8 @@ plot(dGau_fix)
 
 dPoi_fix <- DHARMa::simulateResiduals(poi_m_fix)
 plot(dPoi_fix)
+
+citation('DHARMa')
 
 ```
 
@@ -116,7 +118,62 @@ MuMIn::r.squaredGLMM(log_m)
 
 
 ### Social Engagement Task
-```{r}
+```{r add logfile to social engagement}
+# Subset data so we only have social engagement task
+social <- subset(Samples, Task == 'SocialEngagement')
+
+# Read logfile
+social_log <- read_csv('logfiles_SocialEngagement/logfiles_SocialEngagement.csv')
+
+# Merge
+social <- merge(social, social_log, by = c('Trial','ParticipantID'))
+
+# Create direction and ostensive variables 
+social$direct <- ifelse(grepl('dir', social$Video.y), 1, 0)
+social$ostensive <- ifelse(!grepl('-', social$Video.y),1,0)
+
+#Plot
+p_direct <- ggplot(social, aes(Time, PupilSize, color = ParticipantID)) +
+  geom_smooth() + facet_wrap(.~direct, scales = "free_x") + ggtitle('Direct')
+p_ostensive <- ggplot(social, aes(Time, PupilSize, color = ParticipantID)) +
+  geom_smooth() + facet_wrap(.~ostensive, scales = "free_x") + ggtitle('Ostensive')
+
+p_direct / p_ostensive
+
+```
+
+
+```{r model}
+# Average pupilsize per fixation
+pup <- social[!is.na(social$FixationNo),] %>% # remember to remove NAs 
+  group_by(ParticipantID, Trial, FixationNo) %>% 
+  summarize(PupilSize = mean(PupilSize, na.rm = T),
+            Task = Task[1], ParticipantGender = ParticipantGender[1],
+            direct = direct[1], ostensive = ostensive[1])
+
+#Models
+# Lognormal distribution
+log_m2 <- glmer(PupilSize ~ 1 + direct*ostensive + (1+direct*ostensive|ParticipantID), 
+               data = pup,
+               family = gaussian(link = 'log'))
+
+plot(log_m2)
+
+#Summarise lognormal model
+summary(log_m2)
+#The estimates are on a log-scale!
+
+
+MuMIn::r.squaredGLMM(log_m2)
+
+
+```
+
+```{r plot}
+#Spaghetti plot
+social %>% ggplot(aes(ostensive, PupilSize, group = ParticipantID, color = ParticipantID,labs = T)) +
+  facet_wrap(.~direct) + 
+  geom_smooth(method = "lm", se = TRUE, alpha = .15, aes(fill = ParticipantID))
 
 ```
 
