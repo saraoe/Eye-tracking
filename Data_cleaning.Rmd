@@ -355,8 +355,8 @@ fixations_sample <- f1_t1[!is.na(Samples_merged$FixationNo),] %>%
   group_by(Task, ParticipantID, Trial, FixationNo) %>% 
   dplyr::summarise(
     Duration = max(Time, na.rm = T)-min(Time, na.rm = T),
-    meanX = mean(RightGazeX),
-    meanY = mean(LeftGazeY)
+    meanX = mean(GazeX),
+    meanY = mean(GazeY)
   )
 
 

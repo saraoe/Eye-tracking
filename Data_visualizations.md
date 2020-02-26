@@ -1,32 +1,33 @@
----
-title: "Data visualizations"
-author: "Sara Østergaard"
-date: "2/11/2020"
-output: 
-  md_document:
-    variant: markdown_github
----
-
-```{r setup, include=FALSE}
-require(knitr)
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
-library(tidyverse)
-ggplot2::theme_set(theme_bw())
-```
-
-```{r load data}
+``` r
 Samples <- read_csv("Exported_EyeLink_data/Cleaned/Samples_merged_Fabio.csv") %>% 
   mutate(GazeY = 1051-GazeY, Fix_MeanY = 1051-Fix_MeanY) %>% #As the y-axis is flipped in Eyelink (1051 because you want to keep the zero!)
   filter(Time<=41202) #There are so few datapoints with the incorrect time that we will just filter them out
 ```
 
-## Sanity checks
+    ## Parsed with column specification:
+    ## cols(
+    ##   .default = col_double(),
+    ##   ParticipantID = col_character(),
+    ##   ParticipantGender = col_character(),
+    ##   EyeTracked = col_character(),
+    ##   Task = col_character(),
+    ##   ForagingType = col_character(),
+    ##   Stimulus = col_character(),
+    ##   Video = col_logical(),
+    ##   Sac_Blink = col_logical(),
+    ##   Sac_Direction = col_character()
+    ## )
+
+    ## See spec(...) for full column specifications.
+
+Sanity checks
+-------------
 
 ### Check distribution of fixations
 
 Let's start with density plots
 
-```{r sanity checks fixations}
+``` r
 # before doing this we must make a summary dataset
 
 Fix <- Samples[!is.na(Samples$FixationNo),] %>% # remember to remove NAs 
@@ -41,25 +42,42 @@ Fix <- Samples[!is.na(Samples$FixationNo),] %>% # remember to remove NAs
 
 # plot density of fixation number
 ggplot(Fix, aes(Fix_Number, color = ParticipantID)) + geom_density() + facet_wrap(.~Task)
+```
 
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20fixations-1.png)
+
+``` r
 # plot density of fixation duration
 ggplot(Fix, aes(Fix_Duration, color = ParticipantID)) + geom_density() + facet_wrap(.~Task)
 ```
 
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20fixations-2.png)
+
 We can also use histograms:
 
-```{r sanity checks fixations histograms}
+``` r
 # plot density of fixation number
 ggplot(Fix, aes(Fix_Number, fill = ParticipantGender)) + geom_histogram() + facet_wrap(.~Task)
+```
 
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20fixations%20histograms-1.png)
+
+``` r
 # plot density of fixation duration
 ggplot(Fix, aes(Fix_Duration, fill = ParticipantGender)) + geom_histogram() + facet_wrap(.~Task)
 ```
 
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20fixations%20histograms-2.png)
+
 ### Check distribution of saccades
+
 ### - notice anything interesting about the number of saccades?
 
-```{r sanity checks saccades}
+``` r
 ## Check distribution of saccades
 
 # before doing this we must make a summary dataset
@@ -77,36 +95,64 @@ Sac <- Samples[!is.na(Samples$SaccadeNo),] %>% # remember to remove NAs
 
 # plot density of saccade number
 ggplot(Sac, aes(Sac_Number, color = ParticipantID)) + geom_density() + facet_wrap(.~Task)
+```
 
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20saccades-1.png)
+
+``` r
 # plot density of saccade duration
 ggplot(Sac, aes(Sac_Duration, color = ParticipantID)) + geom_density() + facet_wrap(.~Task)
+```
 
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20saccades-2.png)
+
+``` r
 # plot density of saccade amplitude
 ggplot(Sac, aes(Sac_Amplitude, color = ParticipantID)) + geom_density() + facet_wrap(.~Task)
+```
 
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20saccades-3.png)
+
+``` r
 # plot density of saccade number by gender
 ggplot(Sac, aes(Sac_Number, color = ParticipantGender)) + geom_density() + facet_wrap(.~Task)
 ```
 
+![](Data_visualizations_files/figure-markdown_github/sanity%20checks%20saccades-4.png)
 
 ### Remove all the data points that fall outside of the screen coordinates (1680, 1050)
 
-```{r remove artefacts}
+``` r
 # before...
 plot(density(Samples$GazeX, na.rm = TRUE))
-plot(density(Samples$GazeY, na.rm = TRUE))
+```
 
+![](Data_visualizations_files/figure-markdown_github/remove%20artefacts-1.png)
+
+``` r
+plot(density(Samples$GazeY, na.rm = TRUE))
+```
+
+![](Data_visualizations_files/figure-markdown_github/remove%20artefacts-2.png)
+
+``` r
 Samples <- Samples %>% filter(GazeX >= 0 & GazeX <= 1680 & GazeY >= 0 & GazeY <= 1050)
 
 # ...and after
 plot(density(Samples$GazeX, na.rm = TRUE))
+```
+
+![](Data_visualizations_files/figure-markdown_github/remove%20artefacts-3.png)
+
+``` r
 plot(density(Samples$GazeY, na.rm = TRUE))
 ```
 
+![](Data_visualizations_files/figure-markdown_github/remove%20artefacts-4.png)
 
 ### Check distribution of pupil sizes
 
-```{r}
+``` r
 # before doing this we must make a summary dataset
 Pup <- Samples[!is.na(Samples$PupilSize),] %>% # remember to remove NAs 
   group_by(ParticipantID, Trial) %>% 
@@ -117,14 +163,16 @@ Pup <- Samples[!is.na(Samples$PupilSize),] %>% # remember to remove NAs
 ggplot(Pup, aes(PupilSize, color = ParticipantID)) + geom_density() + facet_wrap(.~Task)
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-1-1.png)
 
-## Visualizations
+Visualizations
+--------------
 
 ### Scanpath
 
-```{r}
+``` r
 ## Here I am making the scanpath for one participant in one trial
-x = subset(Samples, ParticipantID ==	'F7_2' & Trial == 10)
+x = subset(Samples, ParticipantID ==    'F7_2' & Trial == 10)
 x$FixationNo <- as.factor(x$FixationNo)
 
 ## Let's make a summary dataset
@@ -145,10 +193,13 @@ ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) +
   xlim(0,1680) + ylim(0,1050)
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
 Scanpath for Social engagement experiment
-```{r}
+
+``` r
 ## Here I am making the scanpath for one participant in one trial
-x = subset(Samples, ParticipantID ==	'F1' & Trial == 4)
+x = subset(Samples, ParticipantID ==    'F1' & Trial == 4)
 x$FixationNo <- as.factor(x$FixationNo)
 
 ## Let's make a summary dataset
@@ -162,20 +213,17 @@ ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) +
   geom_point(size = Fix$Duration*.02, alpha = .8) +
   ggrepel::geom_text_repel(aes(label = Fix$Duration), size = 3, color = "black") +
   xlim(0,1680) + ylim(0,1050)
-
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-3-1.png)
 
-Using a for-loop, make a scanpath for each participant in the Foraging experiment. Use facets to plot the 10
-trials separately for each participant. Use these plots as diagnostic tools in order to answer the following
-questions:
+Using a for-loop, make a scanpath for each participant in the Foraging experiment. Use facets to plot the 10 trials separately for each participant. Use these plots as diagnostic tools in order to answer the following questions:
 
-1) Do the data look reasonable and of good quality? Do we have any issues?
-2) Can we differentiate between the two conditions (Count and Search) only by looking at the scanpaths?
-3) Can we spot the trials in which the participants found the star?
+1.  Do the data look reasonable and of good quality? Do we have any issues?
+2.  Can we differentiate between the two conditions (Count and Search) only by looking at the scanpaths?
+3.  Can we spot the trials in which the participants found the star?
 
-```{r}
-
+``` r
 library(pacman)
 p_load(gridExtra)
 
@@ -186,7 +234,7 @@ participants <- as.character(levels(as.factor(foraging$ParticipantID))) #Charact
 
 for(i in 1:length(participants)){
   for(t in levels(as.factor(foraging$Trial)))
-    x = subset(foraging, ParticipantID ==	participants[i], Trial = t) #Choosing only one participant and one trial
+    x = subset(foraging, ParticipantID ==   participants[i], Trial = t) #Choosing only one participant and one trial
     
     for(p in levels(as.factor(x$Stimulus))){
       Fix <- x[!is.na(x$FixationNo) & x$Stimulus == p,] %>% 
@@ -213,15 +261,13 @@ for(i in 1:length(participants)){
     }
     ## could use patchwork function to make the plots look nicer
 }
-
-
-
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-1.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-2.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-3.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-4.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-5.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-6.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-7.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-8.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-9.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-10.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-11.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-12.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-13.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-14.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-15.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-16.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-17.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-18.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-19.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-20.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-21.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-22.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-23.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-24.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-25.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-26.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-27.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-28.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-29.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-30.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-31.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-32.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-33.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-34.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-35.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-36.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-37.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-38.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-39.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-40.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-41.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-42.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-43.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-44.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-45.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-46.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-47.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-48.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-49.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-50.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-51.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-52.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-53.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-54.png)![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-4-55.png)
 
 ### Heatmap
 
-```{r}
+``` r
 ## Here is a palette of heatmap-friendly colors
 heat_colors <- colorRampPalette(
   c(
@@ -238,10 +284,9 @@ heat_colors <- colorRampPalette(
 )
 ```
 
-
-```{r}
+``` r
 ## Here I am making the scanpath for one participant in one trial
-x = subset(Samples, ParticipantID ==	'F7_2' & Trial == 1)
+x = subset(Samples, ParticipantID ==    'F7_2' & Trial == 1)
 
 ## Let's make a summary dataset
 Fix <- x[!is.na(x$FixationNo),] %>% 
@@ -262,9 +307,11 @@ ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) +
   theme(legend.position = "none")
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
 Excercise: Make a cumulative heatmap for all participants in the Foraging experiment looking at the 'penguins.jpg' image and facet the graph by Foraging Type (Search vs. Count). What do you notice?
 
-```{r}
+``` r
 ## Subset data for only penguins trials
 penguin = subset(Samples, Stimulus == 'penguins.jpg')
 
@@ -288,21 +335,19 @@ ggplot(Fix_pen, aes(MeanX, MeanY, color = Fix_pen$FixationNo)) +
   xlim(0,1680) + ylim(0,1050) +
   theme(legend.position = "none")+
   facet_wrap(.~ForagingType)
-
-
-
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 ### AOIs
 
-```{r}
+``` r
 ## Define an AOI for the black sheep
 AOI = c(720, 930, 50, 330)
       # xmin xmax ymin ymax
 ```
 
-```{r}
+``` r
 ## Let's make a summary dataset
 Fix <- Samples[!is.na(Samples$FixationNo),] %>% 
   group_by(ParticipantID, Trial, FixationNo) %>% # since I only have one participant and one trial
@@ -325,11 +370,13 @@ ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) +
   theme(legend.position = "none")
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-9-1.png)
+
 Excercise: Make a cumulative heatmap for all participants in the Foraging experiment looking at the 'dolphins.jpg' image and facet the graph by Foraging Type (Search vs. Count) *after having created an AOI*. What do you notice?
 
-```{r}
+``` r
 ## Making a subset with only image puinguin
-x = subset(Samples, Stimulus ==	'dolphins.jpg' & Task == 'Foraging')
+x = subset(Samples, Stimulus == 'dolphins.jpg' & Task == 'Foraging')
 
 # define area of interest
 AOI = c(459, 950, 250, 500)
@@ -358,13 +405,13 @@ ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) +
   facet_wrap(.~ForagingType) # deviding in plot in respect to foraging t
 ```
 
-
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
 ### Growth curves
 
 Growth curves show how proportional looking at one or more specific AOIs changes over time and across participants. Let's start by definining to AOIs:
 
-```{r}
+``` r
 ## Define an AOI for the black sheep
 AOI1 = c(300, 700, 200, 450)
 AOI2 = c(600, 1100, 600, 750)
@@ -373,7 +420,7 @@ AOI2 = c(600, 1100, 600, 750)
 
 Let's make a summary dataset for fixations and filter the fixations that fall within one of the two AOIs. The plot below shows what the two AOIs look like:
 
-```{r}
+``` r
 ## Let's make a summary dataset
 Fix <- Samples[!is.na(Samples$FixationNo),] %>% 
   group_by(ParticipantID, Trial, FixationNo) %>% # since I only have one participant and one trial
@@ -401,9 +448,11 @@ ggplot(Fix, aes(MeanX, MeanY, color = Fix$FixationNo)) +
   theme(legend.position = "none")
 ```
 
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-12-1.png)
+
 Now let's make a new summary dataset where we compute proportions of fixations in either of the two AOIs divided by total number of fixations, and let's plot this proportion using a smoothing function. Do we notice anything interesting?
 
-```{r}
+``` r
 Prop <- Fix %>% 
   group_by(FixationNo) %>% 
   summarize(AOI1 = sum(InAOI1 == TRUE)/(length(InAOI1)+length(InAOI2))*100,
@@ -412,15 +461,13 @@ Prop <- Fix %>%
 
 ggplot(Prop, aes(FixationNo, Proportion, color = AOI)) +
   geom_smooth() + ylim(-10,100)
-
 ```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 Exercise: Try adding a third AOI and computing proportional looks to it:
-
-```{r}
-
-```
-
 
 #### Growth curves for pupil size
 
@@ -428,15 +475,31 @@ Here we are going to plot the raw data since we are not interested in distinguis
 
 *Notice the different scales on the x axis. How do we interpret these results?*
 
-```{r}
+``` r
 ggplot(Samples, aes(Time, PupilSize, color = ParticipantGender)) +
   geom_smooth() + facet_wrap(.~Task, scales = "free_x")
+```
 
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-15-1.png)
+
+``` r
 ggplot(Samples, aes(Time, PupilSize, color = ParticipantID)) +
   geom_smooth() + facet_wrap(.~Task, scales = "free_x")
+```
 
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-15-2.png)
+
+``` r
 soc <- subset(Samples, Task == 'SocialEngagement')
 
 ggplot(soc, aes(Time, PupilSize, color = ParticipantGender)) +
   geom_smooth() #+ facet_wrap(.~Task, scales = "free_x")
 ```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](Data_visualizations_files/figure-markdown_github/unnamed-chunk-15-3.png)
