@@ -1,8 +1,10 @@
 ---
 title: "Data analysis"
-author: "Fabio Trecca"
+author: "Sara Østergaard"
 date: "2/11/2020"
-output: html_document
+output: 
+  md_document:
+    variant: markdown_github
 ---
 
 ```{r setup, include=FALSE}
@@ -21,6 +23,9 @@ Samples <- read_csv("Exported_EyeLink_data/Cleaned/Samples_merged_Fabio.csv") %>
 
 ### Foraging Experiment
 ```{r model of fixations}
+# Subset data so we only have foraging task
+foraging <- subset(Samples, Task == 'Foraging')
+
 # Subset data so we only have one row per fixation
 Fix <- foraging[!is.na(foraging$FixationNo),] %>% # remember to remove NAs 
   group_by(ParticipantID, Trial) %>% 
@@ -64,9 +69,6 @@ citation('DHARMa')
 
 
 ```{r model of saccades}
-# Subset data so we only have one row per saccade and only foraging task
-foraging <- subset(Samples, Task == 'Foraging')
-
 Sac <- foraging[!is.na(foraging$SaccadeNo),] %>% # remember to remove NAs 
   group_by(ParticipantID, Trial, SaccadeNo) %>% 
   summarize(Sac_Duration = mean(Sac_Duration, na.rm = T),
@@ -132,6 +134,13 @@ social <- merge(social, social_log, by = c('Trial','ParticipantID'))
 social$direct <- ifelse(grepl('dir', social$Video.y), 1, 0)
 social$ostensive <- ifelse(!grepl('-', social$Video.y),1,0)
 
+social %>% 
+  summarise(
+    Ndirect = sum(direct),
+    Nostensive = sum(ostensive)
+  )
+
+
 #Plot
 p_direct <- ggplot(social, aes(Time, PupilSize, color = ParticipantID)) +
   geom_smooth() + facet_wrap(.~direct, scales = "free_x") + ggtitle('Direct')
@@ -157,23 +166,33 @@ log_m2 <- glmer(PupilSize ~ 1 + direct*ostensive + (1+direct*ostensive|Participa
                data = pup,
                family = gaussian(link = 'log'))
 
-plot(log_m2)
+log_m3 <- glmer(PupilSize ~ 1 + direct+ostensive + (1+direct+ostensive|ParticipantID), 
+               data = pup,
+               family = gaussian(link = 'log'))
 
 #Summarise lognormal model
 summary(log_m2)
+summary(log_m3)
 #The estimates are on a log-scale!
 
-
+#variance explained
 MuMIn::r.squaredGLMM(log_m2)
-
+MuMIn::r.squaredGLMM(log_m3)
 
 ```
 
 ```{r plot}
 #Spaghetti plot
+# with interaction
 social %>% ggplot(aes(ostensive, PupilSize, group = ParticipantID, color = ParticipantID,labs = T)) +
   facet_wrap(.~direct) + 
   geom_smooth(method = "lm", se = TRUE, alpha = .15, aes(fill = ParticipantID))
+
+# Only for direct/averted
+pup %>% ggplot(aes(direct, PupilSize, group = ParticipantID, color = ParticipantID,labs = T)) +
+  geom_smooth(method = "lm", se = TRUE, alpha = .15, aes(fill = ParticipantID))
+
+ggplot(aes(x = direct, y = PupilSize), data = pup) + geom_smooth(method = 'lm', se = T, alpha = .15)
 
 ```
 

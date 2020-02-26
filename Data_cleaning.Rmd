@@ -1,8 +1,10 @@
 ---
 title: "Data_cleaning"
-author: "Fabio Trecca"
+author: "Sara Østergaard"
 date: "2/10/2020"
-output: html_document
+output: 
+  md_document:
+    variant: markdown_github
 ---
 
 ```{r setup, include=FALSE}
