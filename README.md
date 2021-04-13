@@ -3,7 +3,7 @@ _First assignment of Comp Model. Data from eyetracking workshop._
 
 Analysis of Eye-tracking data in two experiments.
 ### Foraging experiment
-According to the eye-mind hypothesis (Just & Carpenter, n.d.) , eye-movements are linked to the
+According to the eye-mind hypothesis, eye-movements are linked to the
 processing of the mind basically meaning that is it possible to infer cognitive processing in the brain
 from the movements of the eyes. In this experiment we investigated to what extent top-down
 constraints affect eye movements. The experiment is based upon a former experiment conducted by
