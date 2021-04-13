@@ -1,5 +1,5 @@
 # Eye-tracking
-_First assignment of Comp Model. Data from eye-tracking workshop._
+_First assignment of Computational Modelling, Cognitive Science BSc, Aarhus University. Data from eye-tracking workshop._
 
 Analysis of eye-tracking data in two experiments.
 ### Foraging experiment
