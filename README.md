@@ -1,7 +1,7 @@
 # Eye-tracking
-_First assignment of Comp Model. Data from eyetracking workshop._
+_First assignment of Comp Model. Data from eye-tracking workshop._
 
-Analysis of Eye-tracking data in two experiments.
+Analysis of eye-tracking data in two experiments.
 ### Foraging experiment
 According to the eye-mind hypothesis, eye-movements are linked to the
 processing of the mind basically meaning that is it possible to infer cognitive processing in the brain
